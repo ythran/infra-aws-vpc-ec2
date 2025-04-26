@@ -54,3 +54,42 @@ resource "aws_route_table_association" "public_subnet_association" {
   subnet_id      = aws_subnet.public_subnet.id
   route_table_id = aws_route_table.public_route_table.id
 }
+
+# Security Group para a EC2
+resource "aws_security_group" "instance_sg" {
+  name        = "instance-sg-lab"
+  description = "Permite acesso SSH"
+  vpc_id      = aws_vpc.main_vpc.id
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "security-group-lab"
+  }
+}
+
+# Instância EC2
+resource "aws_instance" "web_server" {
+  ami                    = "ami-07caf09b362be10b8" # Ubuntu Server 22.04 LTS (us-east-1)
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.public_subnet.id
+  vpc_security_group_ids = [aws_security_group.instance_sg.id]
+  associate_public_ip_address = true
+
+  tags = {
+    Name = "ec2-lab-server"
+  }
+}
